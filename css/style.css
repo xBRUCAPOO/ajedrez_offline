@@ -122,9 +122,16 @@ body {
   width: 100%;
   max-width: 1500px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  /* MODIFICADO: 360px (antes 300px) — así "Jugador 1 · Blancas" entra en
+     la misma fila que Deshacer/Rehacer sin saltar de línea, como en la
+     referencia (mensajes más largos, como el de jaque mate, igual pueden
+     pasar a una segunda línea; eso es esperable y no rompe nada). */
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 16px 32px; /* fila / columna */
-  align-items: start;
+  /* MODIFICADO: antes "start" (cada columna con su propia altura). Ahora
+     "stretch" (el valor por defecto) para que la barra lateral tome toda
+     la altura de la fila (la del tablero) y así pueda empujar "Tablas" /
+     "Nueva partida" hasta el final, como en la referencia. */
 }
 @media (max-width: 760px){
   .wrap { grid-template-columns: 1fr; gap: 20px; }
@@ -243,17 +250,14 @@ h1 {
 /* NUEVO: contenedor con perspectiva 3D, necesario para animar el giro del
    tablero (rotateY) cuando cambia el turno. MODIFICADO: position:relative
    para poder ubicar la flecha de última jugada (.last-move-arrow) encima.
-   MODIFICADO: el tope de altura (vh) se hizo más conservador (antes 72vh)
-   pensando en el uso real de la página: las netbooks "Juana Manso" del
-   gobierno tienen pantallas de 1366x768, y descontando la barra del
-   navegador la altura útil ronda los 650-700px. Con este valor el tablero
-   entra completo sin necesitar scroll, dejando lugar al header, el estado
-   y el pie de página. En pantallas más altas, el tope de 640px evita que
-   crezca de forma desproporcionada. */
+   MODIFICADO: el tope de altura subió (antes 60vh/640px) porque la columna
+   principal ya no tiene el texto de estado (se movió a la barra lateral),
+   así que el tablero puede ocupar más espacio vertical, como en la
+   referencia. Se vuelve a verificar que entre sin scroll en 1366x768. */
 .board-stage {
   position: relative;
   perspective: 1400px;
-  width: min(100%, 60vh, 640px);
+  width: min(100%, 70vh, 700px);
 }
 
 /* NUEVO: flecha que marca de dónde a dónde fue la última jugada (ver
@@ -470,15 +474,33 @@ h1 {
   50%      { opacity: 1; }
 }
 
-/* MODIFICADO: los controles de partida se movieron al panel lateral (antes
-   estaban en una fila debajo del tablero, .controls). controls-row agrupa
-   Deshacer/Rehacer lado a lado; Tablas y Nueva partida quedan como botones
-   propios a todo el ancho del panel (btn-full), ya que su texto crece con
-   el contador de clicks ("Nueva partida (3/5)"). */
-.controls-panel { display: flex; flex-direction: column; gap: 8px; }
+/* MODIFICADO: siguiendo la referencia, estos controles ya no van dentro de
+   una tarjeta (.panel): quedan sueltos, directamente sobre el fondo de la
+   página, igual que Capturas/Movimientos SÍ siguen siendo tarjetas.
+   - .controls-top-row: Deshacer + Rehacer a la izquierda, el estado de la
+     partida ("Jugador 1 · Blancas") a la derecha, en la misma fila.
+   - .controls-bottom: Tablas y Nueva partida, con margin-top:auto para
+     quedar empujados al final de la columna lateral (a la altura del pie
+     del tablero), con su ancho natural en vez de ocupar todo el panel. */
+.controls-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .controls-row { display: flex; gap: 8px; }
-.controls-row button { flex: 1; }
-.btn-full { width: 100%; justify-content: center; }
+.controls-bottom {
+  margin-top: auto; /* empuja este grupo al final de la columna lateral */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* botones con su ancho natural, no todo el ancho del panel */
+  gap: 8px;
+}
+/* MODIFICADO: ya no se estiran a todo el ancho (antes flex:1 + .btn-full);
+   Deshacer/Rehacer/Tablas/Nueva partida usan su ancho natural, como en la
+   referencia. La clase .btn-label sigue existiendo para que
+   setupMultiClickButton (script.js) pueda actualizar sólo el texto. */
 button {
   font-family: var(--font-body);
   background: transparent;

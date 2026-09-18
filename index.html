@@ -51,11 +51,11 @@
     </div>
   </header>
 
-  <!-- MODIFICADO: sólo el estado y el tablero quedan en la columna
-       principal; el reloj se movió al header y los controles de partida al
-       panel lateral, así el tablero no compite con ellos por altura. -->
+  <!-- MODIFICADO: se saca el texto de estado de acá (se movió a la barra
+       lateral, junto a Deshacer/Rehacer, siguiendo la referencia). Sólo
+       queda el aviso corto (toast) y el tablero, para que use casi toda la
+       altura disponible. -->
   <div class="board-area">
-    <div class="status" id="status">Jugador 1 · Blancas</div>
     <!-- NUEVO: aviso corto y temporal (ej. "ese movimiento deja tu rey en jaque") -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -68,6 +68,11 @@
     </div>
   </div>
 
+  <!-- MODIFICADO: siguiendo la referencia, Capturas/Movimientos quedan
+       arriba (como tarjetas) y Deshacer/Rehacer + el estado de la partida
+       van sueltos debajo, sin tarjeta. Tablas y Nueva partida quedan
+       empujados al final de la columna (ver .controls-bottom en CSS), a la
+       altura del final del tablero. -->
   <aside>
     <section class="panel">
       <h2>Capturas</h2>
@@ -87,9 +92,10 @@
       <h2>Movimientos</h2>
       <ol id="moveList"></ol>
     </section>
-    <!-- NUEVO: controles de la partida, reubicados acá (antes estaban
-         debajo del tablero) para liberarle esa altura al tablero. -->
-    <section class="panel controls-panel">
+
+    <!-- NUEVO: Deshacer/Rehacer + el estado ("Jugador 1 · Blancas"), en una
+         misma fila suelta (sin tarjeta), como en la referencia. -->
+    <div class="controls-top-row">
       <div class="controls-row">
         <button id="undoBtn" type="button">
           <span class="material-symbols-outlined" aria-hidden="true">undo</span>
@@ -101,17 +107,25 @@
           Rehacer
         </button>
       </div>
+      <!-- MODIFICADO: el estado de la partida ahora vive acá (antes arriba del tablero) -->
+      <div class="status" id="status">Jugador 1 · Blancas</div>
+    </div>
+
+    <!-- NUEVO: Tablas y Nueva partida, empujados al pie de la columna
+         lateral (margin-top:auto en CSS), sin tarjeta y con ancho propio
+         (no ocupan todo el ancho del panel), igual que en la referencia. -->
+    <div class="controls-bottom">
       <!-- MODIFICADO: requiere 10 clicks seguidos para evitar ofrecer tablas por error -->
-      <button id="drawBtn" class="btn-full" type="button">
+      <button id="drawBtn" type="button">
         <span class="material-symbols-outlined" aria-hidden="true">handshake</span>
         <span class="btn-label">Tablas</span>
       </button>
       <!-- MODIFICADO: requiere 5 clicks seguidos para evitar reiniciar por error (ver script.js: setupMultiClickButton) -->
-      <button id="resetBtn" class="btn-full" type="button">
+      <button id="resetBtn" type="button">
         <span class="material-symbols-outlined" aria-hidden="true">restart_alt</span>
         <span class="btn-label">Nueva partida</span>
       </button>
-    </section>
+    </div>
   </aside>
 
   <!-- NUEVO: pie de página con versión y fecha. Actualizar ambos valores
@@ -119,7 +133,7 @@
   <footer class="app-footer">
     <span>Ajedrez</span>
     <span aria-hidden="true">·</span>
-    <span>v1.4 · 18/09/2026</span>
+    <span>v1.5 · 18/09/2026</span>
   </footer>
 </div>
 
