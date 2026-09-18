@@ -1,0 +1,690 @@
+/* =========================================================================
+   AJEDREZ — hoja de estilos
+   MODIFICADO: reubicado a la carpeta css/ (antes estaba junto a index.html)
+   TODOS los colores y TODAS las tipografías están definidos como variables
+   en :root (ver bloques de tema claro/oscuro más abajo). Los íconos usan
+   Material Symbols Outlined (Google Fonts), cargado desde index.html.
+   ========================================================================= */
+
+/* ---------- Tema claro ---------- */
+:root[data-theme="light"]{
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --text: #1c1c1e;
+  --text-dim: #767671;
+  --border: #e3e1d8;
+  --board-light: #f1efe6;
+  --board-dark: #c7c0ac;
+  --accent: #4f6f5c;
+  --accent-soft: rgba(79,111,92,.14);
+  --danger: #b3543f;
+  --danger-soft: rgba(211,84,58,.35);
+  /* NUEVO: colores que antes estaban "sueltos" en rgba() ahora son variables */
+  --shadow-color: rgba(28,28,30,.08);
+  --backdrop-color: rgba(20,20,18,.5);
+  --piece-shadow: rgba(28,28,30,.28);
+}
+
+/* ---------- Tema oscuro ---------- */
+:root[data-theme="dark"]{
+  --bg: #131418;
+  --surface: #1b1c21;
+  --text: #eceef1;
+  --text-dim: #8c8e96;
+  --border: #2b2c33;
+  --board-light: #2e3138;
+  --board-dark: #17181c;
+  --accent: #7fa08f;
+  --accent-soft: rgba(127,160,143,.18);
+  --danger: #d9836f;
+  --danger-soft: rgba(217,131,111,.4);
+  --shadow-color: rgba(0,0,0,.45);
+  --backdrop-color: rgba(0,0,0,.6);
+  --piece-shadow: rgba(0,0,0,.6);
+}
+
+/* =========================================================================
+   NUEVO: variables de tipografía (todas provienen de Google Fonts, ver el
+   <link> en index.html). Se definen en :root sin depender del tema.
+     --font-heading -> Quicksand: título y encabezados de panel (redondeada,
+                       aporta el toque "amigable" pedido)
+     --font-body    -> Nunito: textos de interfaz, botones, etiquetas
+     --font-mono    -> DM Mono: notación de jugadas, coordenadas y turno
+                       (encaja con la tradición de notación ajedrecística)
+   ========================================================================= */
+:root{
+  --font-heading: 'Quicksand', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* NUEVO: duraciones/curvas de animación centralizadas como variables */
+  --anim-fast: .15s;
+  --anim-move: .28s;
+  --anim-flip: .16s;
+  --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+* { box-sizing: border-box; }
+
+/* =========================================================================
+   NUEVO: barras de desplazamiento (scrollbar) con la estética de la página
+   en vez de la barra genérica del sistema/navegador. Se define tanto para
+   Firefox (scrollbar-width/scrollbar-color) como para navegadores basados
+   en Chromium/WebKit (::-webkit-scrollbar), usando las mismas variables de
+   color que el resto de la página — así se adapta sola al cambiar de tema.
+   Aplica a toda la página y, en particular, a la lista de Movimientos
+   (#moveList), que es la que tiene su propio scroll interno.
+   ========================================================================= */
+html, #moveList {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--border) transparent; /* Firefox: color del "pulgar" y de la pista */
+}
+html::-webkit-scrollbar, #moveList::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html::-webkit-scrollbar-track, #moveList::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb, #moveList::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 8px;
+  border: 2px solid transparent; /* deja un margen fino usando background-clip */
+  background-clip: padding-box;
+}
+html::-webkit-scrollbar-thumb:hover, #moveList::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent);
+}
+
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color var(--anim-fast) ease, color var(--anim-fast) ease;
+}
+
+body {
+  font-family: var(--font-body);
+  display: flex;
+  justify-content: center;
+  /* MODIFICADO: todavía menos padding, para aprovechar mejor pantallas
+     bajas como las de las netbooks educativas (1366x768). */
+  padding: clamp(8px, 1.2vw, 20px);
+}
+
+/* MODIFICADO: se agranda el ancho máximo (antes 920px) para pantallas
+   grandes, pero el espaciado VERTICAL entre el header y el resto (gap) se
+   redujo bastante: en una pantalla de 768px de alto (como las netbooks
+   "Juana Manso" del gobierno, el uso principal de esta página) cada
+   pixel de aire de más entre secciones se nota. */
+.wrap {
+  width: 100%;
+  max-width: 1500px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px 32px; /* fila / columna */
+  align-items: start;
+}
+@media (max-width: 760px){
+  .wrap { grid-template-columns: 1fr; gap: 20px; }
+}
+
+/* ---------- Encabezado ---------- */
+/* MODIFICADO: el reloj ahora vive acá (entre el título y los íconos), en
+   vez de ser una fila propia arriba del tablero — libera esa altura para
+   el tablero, que es lo que más importa en una pantalla baja. */
+header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+.header-controls { display: flex; gap: 6px; margin-left: auto; } /* MODIFICADO: empuja los íconos al extremo derecho */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--anim-fast) ease, color var(--anim-fast) ease, transform var(--anim-fast) ease, background-color var(--anim-fast) ease;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
+.icon-btn:active { transform: scale(.92); } /* NUEVO: microanimación al presionar */
+.icon-btn .material-symbols-outlined { font-size: 19px; }
+
+/* ---------- Zona de tablero ---------- */
+/* MODIFICADO: gap más chico (antes 14px): en la columna principal ahora
+   sólo quedan el estado y el tablero (el reloj se fue al header y los
+   controles de partida al panel lateral), así el tablero gana toda la
+   altura que antes se repartía entre esas filas. */
+.board-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.status {
+  font-family: var(--font-mono); /* NUEVO: el turno usa la tipografía monoespaciada */
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: .01em;
+  transition: color var(--anim-fast) ease;
+}
+
+/* NUEVO: aviso corto y temporal (ej. jugada ilegal por dejar el rey en
+   jaque). Ocupa espacio siempre (min-height) para que el resto de la
+   página no salte cuando aparece/desaparece. */
+.toast {
+  min-height: 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--anim-fast) ease, transform var(--anim-fast) ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* =========================================================================
+   NUEVO: reloj de ajedrez por jugador (ver script.js: tickClock /
+   updateClockDisplay). Se oculta con el atributo [hidden] cuando la partida
+   se juega "sin reloj".
+   ========================================================================= */
+.clocks {
+  display: flex;
+  gap: 8px;
+  /* MODIFICADO: ahora vive en el header (no arriba del tablero), así que ya
+     no necesita coincidir con el ancho del tablero — cada ficha mide lo
+     justo para su contenido. */
+}
+.clock-chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 108px; /* NUEVO: para que quede prolijo aunque el label y el tiempo sean cortos */
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  transition: border-color var(--anim-fast) ease, background-color var(--anim-fast) ease;
+}
+.clock-chip .row-label { font-size: 11px; color: var(--text-dim); }
+.clock-chip .clock-time { font-family: var(--font-mono); font-size: 15px; font-weight: 500; }
+/* El reloj del jugador en turno se resalta con el color de acento */
+.clock-chip.active { border-color: var(--accent); background: var(--accent-soft); }
+.clock-chip.active .clock-time { color: var(--accent); }
+/* Con poco tiempo restante, el reloj activo parpadea suave en rojo */
+.clock-chip.low .clock-time { color: var(--danger); }
+.clock-chip.low.active { animation: clockLowPulse 1s ease-in-out infinite; }
+@keyframes clockLowPulse {
+  0%, 100% { border-color: var(--danger); }
+  50%      { border-color: var(--danger-soft); }
+}
+
+/* NUEVO: contenedor con perspectiva 3D, necesario para animar el giro del
+   tablero (rotateY) cuando cambia el turno. MODIFICADO: position:relative
+   para poder ubicar la flecha de última jugada (.last-move-arrow) encima.
+   MODIFICADO: el tope de altura (vh) se hizo más conservador (antes 72vh)
+   pensando en el uso real de la página: las netbooks "Juana Manso" del
+   gobierno tienen pantallas de 1366x768, y descontando la barra del
+   navegador la altura útil ronda los 650-700px. Con este valor el tablero
+   entra completo sin necesitar scroll, dejando lugar al header, el estado
+   y el pie de página. En pantallas más altas, el tope de 640px evita que
+   crezca de forma desproporcionada. */
+.board-stage {
+  position: relative;
+  perspective: 1400px;
+  width: min(100%, 60vh, 640px);
+}
+
+/* NUEVO: flecha que marca de dónde a dónde fue la última jugada (ver
+   script.js: updateLastMoveArrow). Se dibuja por encima de todo el tablero,
+   semitransparente, para no taparlo. */
+.last-move-arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 15;
+}
+.last-move-arrow .arrow-line { stroke: var(--accent); }
+.last-move-arrow .arrow-head { fill: var(--accent); }
+
+.board {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px var(--shadow-color);
+  position: relative;
+  transform-style: preserve-3d;
+  transition: box-shadow var(--anim-fast) ease; /* NUEVO: la sombra cambia suave al alternar tema */
+}
+
+/* NUEVO: animación de giro automático del tablero (ver script.js:
+   animateFlipAndRender). Rota sobre el eje Y para simular que el tablero
+   se da vuelta hacia el jugador que sigue. */
+@keyframes boardFlipOut { from { transform: rotateY(0deg); } to { transform: rotateY(90deg); } }
+@keyframes boardFlipIn  { from { transform: rotateY(-90deg); } to { transform: rotateY(0deg); } }
+.board.board-flip-out { animation: boardFlipOut var(--anim-flip) ease-in forwards; }
+.board.board-flip-in  { animation: boardFlipIn var(--anim-flip) ease-out forwards; }
+
+.sq {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--anim-fast) ease; /* NUEVO: color de casilla fluido al cambiar de tema */
+}
+.sq.light { background: var(--board-light); }
+.sq.dark { background: var(--board-dark); }
+
+.sq .coord {
+  position: absolute;
+  font-family: var(--font-mono); /* NUEVO: coordenadas también en monoespaciada */
+  font-size: 9px;
+  font-weight: 500;
+  opacity: .5;
+  pointer-events: none;
+}
+.sq .coord.file { bottom: 3px; right: 5px; }
+.sq .coord.rank { top: 3px; left: 5px; }
+.sq.light .coord { color: var(--board-dark); }
+.sq.dark .coord { color: var(--board-light); }
+
+/* =========================================================================
+   NUEVO: piezas como imágenes .png (antes eran SVG en línea).
+   Las imágenes viven en /pieces/{color}{tipo}.png, p. ej. pieces/wK.png
+   ========================================================================= */
+.piece {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.piece-img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px var(--piece-shadow));
+  user-select: none;
+  -webkit-user-drag: none;
+  /* NUEVO: los .png de assets/pieces/ son pixel-art muy chico (~21-30px);
+     sin esto el navegador los suaviza al agrandarlos y se ven borrosos. */
+  image-rendering: pixelated;
+  /* NUEVO: transición para el "levantado" de la pieza seleccionada (ver
+     .sq.selected .piece-img más abajo). No interfiere con el deslizamiento
+     de movimiento, que usa la Web Animations API (tiene prioridad sobre
+     esta transición mientras está en curso). */
+  transition: transform var(--anim-fast) ease, filter var(--anim-fast) ease;
+}
+
+/* NUEVO: la pieza seleccionada se "levanta" un poco, como si se despegara
+   del tablero; al deseleccionarla, la misma transición la hace bajar de
+   nuevo suavemente. */
+.sq.selected .piece-img {
+  transform: translateY(-10%) scale(1.08);
+  filter: drop-shadow(0 8px 8px var(--shadow-color));
+}
+
+/* NUEVO: animación de "aterrizaje" para la pieza que se acaba de mover
+   (clase agregada solo al renderizar tras un movimiento real, ver script.js) */
+@keyframes pieceDrop {
+  0%   { transform: scale(.5);  opacity: 0; }
+  65%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.piece-img.piece-drop { animation: pieceDrop var(--anim-move) var(--ease-bounce); }
+
+/* =========================================================================
+   MODIFICADO: el deslizamiento de piezas ahora se hace con la Web Animations
+   API (img.animate(...) en script.js) en vez de una clase + transición CSS.
+   Con una transición CSS, algunos navegadores no siempre "confirman" a
+   tiempo la posición inicial de una pieza recién creada (el tablero se
+   redibuja entero en cada jugada) y la animación no llegaba a verse. La Web
+   Animations API anima directamente entre los dos estados sin depender de
+   ese paso intermedio, así que es más confiable entre navegadores.
+   ========================================================================= */
+
+/* MODIFICADO: animación de captura más marcada — la pieza capturada da un
+   pequeño salto/giro antes de encogerse y desvanecerse, para que se lea
+   claramente como una captura y no como un simple desvanecido. */
+.piece-capture-ghost {
+  pointer-events: none;
+  z-index: 20;
+  animation: pieceCaptureFade var(--anim-move) ease-in forwards;
+}
+@keyframes pieceCaptureFade {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+  35%  { transform: scale(1.18) rotate(-10deg); opacity: 1; }
+  100% { transform: scale(.15) rotate(20deg) translateY(8px); opacity: 0; }
+}
+
+/* =========================================================================
+   NUEVO: arrastrar y soltar piezas (alternativa al click-click). Ver
+   script.js: onBoardPointerDown / onBoardPointerMove / onBoardPointerUp.
+   ========================================================================= */
+.piece-img.piece-drag-source { opacity: .25; } /* la pieza original se atenúa mientras se arrastra su copia */
+.piece-img.piece-drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 30;
+  filter: drop-shadow(0 6px 10px var(--shadow-color));
+}
+.sq.drag-hover::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 2px dashed var(--accent);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.sq.selected::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 2px solid var(--accent);
+  border-radius: 3px;
+  pointer-events: none;
+  animation: selectIn var(--anim-fast) ease-out; /* NUEVO: el marco de selección entra con una pequeña animación */
+}
+/* NUEVO: si la pieza seleccionada no tiene ningún movimiento legal (está
+   bloqueada o clavada), el marco de selección se pinta en rojo en vez del
+   color de acento, para avisar de un vistazo que no puede moverse. */
+.sq.selected.selected-blocked::after {
+  border-color: var(--danger);
+}
+@keyframes selectIn {
+  from { transform: scale(.85); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.sq.move-dot::before {
+  content: "";
+  position: absolute;
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  pointer-events: none;
+  animation: dotPulse 1.6s ease-in-out infinite; /* NUEVO: pulso sutil en las casillas de movimiento posible */
+}
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.18); opacity: .7; }
+}
+.sq.move-capture::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border: 3px solid var(--accent-soft);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.sq.last-from, .sq.last-to {
+  box-shadow: inset 0 0 0 999px var(--accent-soft);
+}
+.sq.in-check {
+  box-shadow: inset 0 0 0 999px var(--danger-soft);
+}
+/* NUEVO: además del rey (arriba), se resalta cada pieza que lo está
+   atacando, para que se entienda de dónde viene el jaque */
+.sq.checking-piece::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--danger);
+  pointer-events: none;
+  animation: checkPulse 1s ease-in-out infinite;
+}
+@keyframes checkPulse {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1; }
+}
+
+/* MODIFICADO: los controles de partida se movieron al panel lateral (antes
+   estaban en una fila debajo del tablero, .controls). controls-row agrupa
+   Deshacer/Rehacer lado a lado; Tablas y Nueva partida quedan como botones
+   propios a todo el ancho del panel (btn-full), ya que su texto crece con
+   el contador de clicks ("Nueva partida (3/5)"). */
+.controls-panel { display: flex; flex-direction: column; gap: 8px; }
+.controls-row { display: flex; gap: 8px; }
+.controls-row button { flex: 1; }
+.btn-full { width: 100%; justify-content: center; }
+button {
+  font-family: var(--font-body);
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color var(--anim-fast) ease, color var(--anim-fast) ease, transform var(--anim-fast) ease, background-color var(--anim-fast) ease, box-shadow var(--anim-fast) ease;
+}
+/* MODIFICADO: además del color, ahora "levanta" levemente el botón con una
+   sombra sutil al pasar el mouse (microinteracción más "profesional") */
+button:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); box-shadow: 0 4px 10px var(--shadow-color); }
+button:active { transform: scale(.96); box-shadow: none; }
+button .material-symbols-outlined { font-size: 17px; }
+
+/* =========================================================================
+   NUEVO: botones de "confirmación por clicks repetidos" (Nueva partida y
+   Tablas). El botón se va "llenando" con el color de acento a medida que
+   se hace click, usando la variable --progress que fija script.js
+   (setupMultiClickButton). Evita reiniciar la partida u ofrecer tablas por
+   un click accidental.
+   ========================================================================= */
+button.confirming { position: relative; overflow: hidden; border-color: var(--accent); }
+button.confirming::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: var(--progress, 0%);
+  background: var(--accent-soft);
+  transition: width .12s ease;
+}
+button.confirming .material-symbols-outlined,
+button.confirming .btn-label {
+  position: relative; /* por encima del relleno de progreso (::before) */
+  z-index: 1;
+}
+
+/* ---------- Panel lateral ---------- */
+/* MODIFICADO: gap más chico (antes 18px) — ahora hay 3 tarjetas en vez de 2
+   (se sumaron los controles de partida), así que se ajustó el espaciado
+   para que la columna lateral no termine más alta que el propio tablero. */
+aside { display: flex; flex-direction: column; gap: 12px; }
+/* MODIFICADO: cada sección ahora es una "tarjeta" con fondo y borde propio
+   (antes era texto suelto), para que el panel se lea más ordenado y
+   profesional en vez de flotar sobre el fondo de la página. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px; /* MODIFICADO: un poco más compacto que antes (14px 16px) */
+  transition: background-color var(--anim-fast) ease, border-color var(--anim-fast) ease;
+}
+.panel h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-heading); /* NUEVO: títulos de sección en Quicksand */
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.captured-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.captured-row .row-label { font-size: 11px; color: var(--text-dim); width: 52px; flex-shrink: 0; }
+.captured-pieces { display: flex; flex-wrap: wrap; gap: 2px; min-height: 20px; }
+.mini-piece { width: 18px; height: 18px; display: inline-flex; }
+.mini-piece img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+/* MODIFICADO: en vez de reutilizar el fundido sutil de la lista de jugadas,
+   ahora tiene su propio "blop" — un rebote más juguetón, acorde a que acá
+   representa una captura (algo que "cae" en la bandeja de capturas). */
+.mini-piece { animation: blop var(--anim-move) var(--ease-bounce); }
+@keyframes blop {
+  0%   { transform: scale(0);    opacity: 0; }
+  55%  { transform: scale(1.35); opacity: 1; }
+  75%  { transform: scale(.9); }
+  100% { transform: scale(1); }
+}
+/* NUEVO: diferencia de material a favor de ese bando (ej. "+3"). margin-left:
+   auto la empuja al extremo derecho de la fila (ver script.js: renderCaptured) */
+.material-diff {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* =========================================================================
+   NUEVO: texto de relleno mientras un bando todavía no capturó ninguna
+   pieza (ver script.js: renderCaptured). Usa la animación genérica
+   .text-pop, para que aparezca con un pequeño fundido en vez de golpe.
+   ========================================================================= */
+.empty-hint {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+/* NUEVO: animación genérica para textos que "aparecen de la nada" (se
+   aplica por clase a elementos recién creados, como .empty-hint; los
+   textos que cambian de contenido en el mismo elemento —como el estado de
+   la partida o la diferencia de material— se animan desde script.js con
+   la Web Animations API, ver animateTextChange). */
+@keyframes textPop {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.text-pop { animation: textPop var(--anim-fast) ease-out; }
+
+#moveList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 170px; /* MODIFICADO: antes 260px, para que el panel lateral no supere la altura del tablero */
+  overflow-y: auto;
+  font-family: var(--font-mono); /* NUEVO: la notación de jugadas usa monoespaciada */
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+#moveList li { display: flex; gap: 8px; color: var(--text-dim); }
+#moveList li span.num { width: 22px; flex-shrink: 0; opacity: .6; }
+/* MODIFICADO: cada jugada ahora es un ícono de la pieza jugada (en su color)
+   más el resto de la notación, en vez de la inicial de letra (N, B, R...) */
+#moveList li span.w, #moveList li span.b { color: var(--text); display: inline-flex; align-items: center; gap: 3px; }
+.move-piece-icon { width: 14px; height: 14px; display: inline-flex; flex-shrink: 0; }
+.move-piece-icon .piece-img { width: 100%; height: 100%; object-fit: contain; }
+/* MODIFICADO: la lista se reconstruye entera en cada jugada (para poder
+   soportar "Rehacer" de forma prolija), así que la animación de entrada se
+   aplica sólo a la última fila agregada (.move-in), no a todas cada vez. */
+@keyframes moveIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+#moveList li.move-in { animation: moveIn var(--anim-fast) ease-out; }
+
+/* ---------- Diálogo de coronación ---------- */
+dialog {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  font-family: var(--font-body);
+  animation: dialogIn var(--anim-move) var(--ease-bounce); /* NUEVO: entrada suave del diálogo */
+}
+/* NUEVO: el diálogo de coronación aparece con una pequeña animación en vez
+   de mostrarse de golpe (igual que el resto de los elementos que "aparecen"
+   en la página) */
+@keyframes dialogIn {
+  from { opacity: 0; transform: scale(.92) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+dialog::backdrop {
+  background: var(--backdrop-color);
+  animation: backdropIn var(--anim-fast) ease; /* NUEVO: el fondo oscuro también aparece con un fundido */
+}
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+dialog h3 { margin: 0 0 12px; font-family: var(--font-heading); font-size: 15px; font-weight: 600; }
+.promo-choices { display: flex; gap: 8px; }
+.promo-btn {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: border-color var(--anim-fast) ease, transform var(--anim-fast) ease; /* NUEVO */
+}
+.promo-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.promo-btn:active { transform: scale(.94); }
+.promo-btn img { width: 68%; height: 68%; object-fit: contain; image-rendering: pixelated; }
+
+/* ---------- Diálogo de reloj y diálogo de confirmación ---------- */
+/* NUEVO: opciones de control de tiempo, en grilla para que se acomoden solas */
+.clock-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 8px;
+  max-width: 280px;
+}
+.clock-options .clock-preset { justify-content: center; }
+dialog p { margin: 0 0 16px; font-size: 13px; color: var(--text-dim); }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- Footer ---------- */
+/* NUEVO: pie de página con el nombre y la versión/fecha de la última
+   modificación de index.html. Ocupa las dos columnas del grid (como el
+   header) y se actualiza a mano cada vez que se edita ese archivo. */
+.app-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  transition: color var(--anim-fast) ease, border-color var(--anim-fast) ease;
+}
